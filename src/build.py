@@ -805,11 +805,11 @@ def globe(cx, cy):
 
 LINKS = [
     ("github", "GitHub", "github.com/harishhh-paaatel", "https://github.com/harishhh-paaatel",
-     lambda x, y: icon("GitHub", x, y, 22)),
+     lambda x, y: icon("GitHub", x, y, 26)),
     ("linkedin", "LinkedIn", "linkedin.com/in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
-     lambda x, y: icon("LinkedIn", x, y, 22)),
+     lambda x, y: icon("LinkedIn", x, y, 26)),
     ("email", "Email", "kgharishpatel@gmail.com", "mailto:kgharishpatel@gmail.com",
-     lambda x, y: icon("Gmail", x, y, 22)),
+     lambda x, y: icon("Gmail", x, y, 26)),
     ("portfolio", "Portfolio", "harishhh-paaatel.github.io/Portfolio_01", "https://harishhh-paaatel.github.io/Portfolio_01/",
      lambda x, y: globe(x, y)),
 ]
@@ -892,11 +892,79 @@ def build_link(key):
     return svg(p, W, H, f"{name}: {handle}", f"Opens {url}", css, defs, body)
 
 
+def build_connect_banner():
+    """Full-width Connect headline (no photo); the link cards sit below it."""
+    p, W, H = "cb", 1000, 210
+    fdefs, fbody = frame(p, W, H)
+    css = ENTER.format(p=p) + (
+        f"@keyframes {p}-nudge{{0%,100%{{opacity:.25;transform:translateY(0)}}35%{{opacity:1;transform:translateY(6px)}}}}"
+        f".{p}-nudge{{animation:{p}-nudge 1.5s ease-in-out infinite}}"
+        f"@keyframes {p}-pulse{{0%,100%{{opacity:.15}}50%{{opacity:.6}}}}.{p}-pulse{{animation:{p}-pulse 2s ease-in-out infinite}}"
+        f"@keyframes {p}-wave{{0%{{opacity:.7;transform:scale(.6)}}100%{{opacity:0;transform:scale(1.6)}}}}"
+        f".{p}-wave{{transform-box:fill-box;transform-origin:center;animation:{p}-wave 2.4s ease-out infinite}}"
+    )
+    b = [fbody,
+        f'<g class="{p}-fade"{delay(.1)}><text class="m" x="44" y="54" font-size="13" fill="{MUTED}" letter-spacing="1.6">'
+        f'05 <tspan fill="{RED}">/</tspan> CONNECT</text></g>'
+        f'<g class="{p}-up"{delay(.2)}><text class="d" x="42" y="112" font-size="46" font-weight="700" fill="{INK}" letter-spacing="-.9">'
+        f'Have a problem worth solving?</text>'
+        f'<text class="d" x="42" y="166" font-size="46" font-weight="700" fill="{BLUE}" letter-spacing="-.9">Let\'s talk.</text></g>']
+    # right column: availability, location, hint
+    rx = 700
+    b.append(
+        f'<g class="{p}-up"{delay(.45)}>'
+        f'<rect x="{rx}" y="40" width="258" height="30" rx="15" fill="{PANEL}" stroke="{LINE}"/>'
+        f'<circle class="{p}-pulse" cx="{rx+18}" cy="55" r="7.5" fill="#2bd67b"/><circle cx="{rx+18}" cy="55" r="3.6" fill="#2bd67b"/>'
+        f'<text class="m" x="{rx+33}" y="59.2" font-size="11" fill="{SOFT}">OPEN TO AI/ML &amp; SWE INTERNSHIPS</text>'
+        f'<text class="m" x="{rx+4}" y="104" font-size="12.5" fill="{SOFT}">Bengaluru, India · IST (UTC+5:30)</text>'
+        f'<text class="m" x="{rx+4}" y="128" font-size="12.5" fill="{MUTED}">GitHub · LinkedIn · Email · Portfolio</text>'
+        f'<text class="m" x="{rx+4}" y="170" font-size="12.5" fill="{SOFT}">Tap a card below to open it</text></g>'
+    )
+    for i in range(3):
+        b.append(f'<g class="{p}-fade"{delay(.8)}><g class="{p}-nudge"{delay(.6 + i*.18)}>'
+                 f'<path d="M{rx + 222 + i*18} 162 l6 6 l6 -6" fill="none" stroke="{RED if i == 2 else BLUE}" stroke-width="2.6" '
+                 f'stroke-linecap="round" stroke-linejoin="round"/></g></g>')
+    # signal waves behind the headline's end
+    for i in range(2):
+        b.append(f'<circle class="{p}-wave" cx="340" cy="151" r="26" fill="none" stroke="{BLUE}" stroke-width="1.5"'
+                 f' opacity="0"{delay(1 + i*1.2)}/>')
+    b.append(f'<g class="{p}-fade"{delay(.6)}><circle cx="340" cy="151" r="20" fill="{PANEL2}" stroke="{BLUE}" stroke-width="1.5"/>'
+             f'<path d="M330 145 h20 v13 h-20 z M330 145 l10 8 l10 -8" fill="none" stroke="{INK}" stroke-width="1.6" stroke-linejoin="round"/></g>')
+    return svg(p, W, H, "Have a problem worth solving? Let's talk.",
+               "Connect headline: open to AI/ML and SWE internships, Bengaluru. Clickable link cards follow.",
+               css, fdefs + hairline_grad(p), "\n".join(b))
+
+
+def build_contact(key):
+    """Wide clickable card (two per row); the README wraps each in its own link."""
+    _, name, handle, url, ic = next(l for l in LINKS if l[0] == key)
+    p, W, H = "ck" + key[:2], 480, 104
+    css = ENTER.format(p=p) + (
+        f"@keyframes {p}-go{{0%,70%,100%{{transform:translate(0,0)}}80%{{transform:translate(3px,-3px)}}}}"
+        f".{p}-go{{animation:{p}-go 3s ease-in-out 1s infinite}}"
+    )
+    defs = hairline_grad(p) + (
+        f'<linearGradient id="{p}-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1834"/>'
+        f'<stop offset="1" stop-color="{NAVY}"/></linearGradient>'
+    )
+    fs = 13
+    assert 96 + mono_w(handle, fs) < W - 14, handle
+    body = (
+        f'<g class="{p}-up">'
+        f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="18" fill="url(#{p}-bg)"/>'
+        f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="17.5" fill="none" stroke="url(#{p}-hl)" stroke-width="1.4"/>'
+        f'<circle cx="52" cy="52" r="27" fill="{INK}"/>' + ic(52, 52)
+        + f'<text class="d" x="96" y="47" font-size="24" font-weight="600" fill="{INK}">{name}</text>'
+        f'<text class="m" x="96" y="73" font-size="{fs}" fill="{MUTED}">{esc(handle)}</text>'
+        f'<g class="{p}-go">' + ext_arrow(W - 36, 18) + "</g></g>"
+    )
+    return svg(p, W, H, f"{name}: {handle}", f"Opens {url}", css, defs, body)
+
+
 if __name__ == "__main__":
     for name, fn in [("hero-stack", build_hero), ("about-life", build_about), ("stack", build_stack),
-                     ("id-dashboard", build_id), ("connect-photo", build_connect),
-                     ("connect-title", build_connect_title)] + [
-                     ("card-" + l[0], (lambda k: lambda: build_link(k))(l[0])) for l in LINKS]:
+                     ("id-dashboard", build_id), ("connect-banner", build_connect_banner)] + [
+                     ("contact-" + l[0], (lambda k: lambda: build_contact(k))(l[0])) for l in LINKS]:
         data = fn()
         path = os.path.join(OUT, name + ".svg")
         with open(path, "w", encoding="utf-8") as f:

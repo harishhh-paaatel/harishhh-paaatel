@@ -18,12 +18,11 @@
 
 My **GraphRAG Knowledge System** and **PCB Defect Detection & Edge AI** work are written up on my [portfolio](https://harishhh-paaatel.github.io/Portfolio_01/).
 
-<p>
-<img align="left" width="32%" src="./assets/connect-photo.svg?v=1" alt="K G Harish Patel — say hello">
-<img width="60%" src="./assets/connect-title.svg?v=1" alt="Have a problem worth solving? Let's talk.">
-<a href="https://github.com/harishhh-paaatel"><img width="29.5%" src="./assets/card-github.svg?v=1" alt="GitHub: @harishhh-paaatel"></a>
-<a href="https://www.linkedin.com/in/kg-harish-patel"><img width="29.5%" src="./assets/card-linkedin.svg?v=1" alt="LinkedIn: in/kg-harish-patel"></a>
-<a href="mailto:kgharishpatel@gmail.com"><img width="29.5%" src="./assets/card-email.svg?v=1" alt="Email: kgharishpatel@gmail.com"></a>
-<a href="https://harishhh-paaatel.github.io/Portfolio_01/"><img width="29.5%" src="./assets/card-portfolio.svg?v=1" alt="Portfolio: harishhh-paaatel.github.io/Portfolio_01"></a>
+![Have a problem worth solving? Let's talk.](./assets/connect-banner.svg?v=1)
+
+<p align="center">
+<a href="https://github.com/harishhh-paaatel"><img width="49%" src="./assets/contact-github.svg?v=1" alt="GitHub: github.com/harishhh-paaatel"></a>
+<a href="https://www.linkedin.com/in/kg-harish-patel"><img width="49%" src="./assets/contact-linkedin.svg?v=1" alt="LinkedIn: linkedin.com/in/kg-harish-patel"></a>
+<a href="mailto:kgharishpatel@gmail.com"><img width="49%" src="./assets/contact-email.svg?v=1" alt="Email: kgharishpatel@gmail.com"></a>
+<a href="https://harishhh-paaatel.github.io/Portfolio_01/"><img width="49%" src="./assets/contact-portfolio.svg?v=1" alt="Portfolio: harishhh-paaatel.github.io/Portfolio_01"></a>
 </p>
-<br clear="left">
