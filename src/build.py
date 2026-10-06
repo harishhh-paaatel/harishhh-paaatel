@@ -344,7 +344,7 @@ def build_about():
     seg_w = (seg_w_total - gap * (n - 1)) / n
     card = [hairline_card(p, "c", cx0, CY, cw, CH, rx=20)]
     card.append(
-        f'<text class="m" x="{cx0+28}" y="{CY+36}" font-size="12" fill="{MUTED}" letter-spacing="1.6">BEYOND THE CODE</text>'
+        f'<text class="m" x="{cx0+28}" y="{CY+36}" font-size="12" fill="{MUTED}" letter-spacing="1.6">SELECTED WORK</text>'
         f'<text class="m" x="{cx0+cw-28}" y="{CY+36}" font-size="12" fill="{MUTED}" text-anchor="end" letter-spacing="1">1-2-3</text>'
     )
     for i in range(n):
@@ -356,16 +356,26 @@ def build_about():
         )
     mid = cx0 + cw / 2
     iy = CY + 128  # illustration centre line
-    ill_teach = (
-        f'<g class="{p}-bob"><rect x="{mid-86}" y="{iy-46}" width="172" height="96" rx="14" fill="{PANEL2}" stroke="{LINE}"/>'
-        f'<rect x="{mid-86}" y="{iy-46}" width="172" height="20" rx="10" fill="#ffffff" fill-opacity=".05"/>'
-        + "".join(f'<circle cx="{mid-72 + k*11}" cy="{iy-36}" r="3" fill="{c}"/>' for k, c in enumerate([RED, "#ffc23d", "#2bd67b"]))
-        + f'<circle cx="{mid}" cy="{iy+6}" r="20" fill="{RED}"/><path d="M{mid-6} {iy-4} L{mid+9} {iy+6} L{mid-6} {iy+16} Z" fill="#ffffff"/>'
-        f'<rect x="{mid-70}" y="{iy+38}" width="140" height="3" rx="1.5" fill="#ffffff" fill-opacity=".14"/>'
-        f'<rect x="{mid-70}" y="{iy+38}" width="58" height="3" rx="1.5" fill="{RED}"/>'
-        f'<text class="m" x="{mid+108}" y="{iy-14}" font-size="22" font-weight="700" fill="{BLUE}">{{ }}</text>'
-        f'<text class="m" x="{mid-136}" y="{iy+30}" font-size="22" font-weight="700" fill="{BLUE}">&lt;/&gt;</text></g>'
-    )
+    nodes = [(-118, -26), (-62, -48), (-58, 8), (0, -18), (58, -50), (64, 14), (118, -14), (-14, 40), (100, 44)]
+    edges = [(0, 1), (0, 2), (1, 3), (2, 3), (3, 4), (3, 5), (4, 6), (5, 6), (2, 7), (7, 5), (5, 8), (1, 4)]
+    path = [(0, 2), (2, 3), (3, 5), (5, 6)]
+    pt = lambda i: (mid + nodes[i][0], iy + nodes[i][1])
+    ill_graph = "".join(
+        f'<line x1="{pt(a)[0]}" y1="{pt(a)[1]}" x2="{pt(c)[0]}" y2="{pt(c)[1]}" stroke="{SOFT}" stroke-opacity=".28" stroke-width="1.5"/>'
+        for a, c in edges)
+    ill_graph += f'<g class="{p}-scan">' + "".join(
+        f'<line x1="{pt(a)[0]}" y1="{pt(a)[1]}" x2="{pt(c)[0]}" y2="{pt(c)[1]}" stroke="{RED}" stroke-width="2.5" stroke-linecap="round"/>'
+        for a, c in path) + "</g>"
+    on_path = {i for e in path for i in e}
+    for i in range(len(nodes)):
+        x, y = pt(i)
+        hot = i in on_path
+        ill_graph += (f'<circle cx="{x}" cy="{y}" r="{11 if i == 3 else 8}" fill="{PANEL2}" stroke="{RED if hot else BLUE}" stroke-width="2"/>'
+                      f'<circle cx="{x}" cy="{y}" r="{4 if i == 3 else 3}" fill="{RED if hot else BLUE}"/>')
+    ill_graph += (f'<rect x="{mid-140}" y="{iy-64}" width="44" height="18" rx="9" fill="{RED}"/>'
+                  f'<text class="m" x="{mid-118}" y="{iy-51}" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">QUERY</text>'
+                  f'<rect x="{mid+96}" y="{iy-54}" width="44" height="18" rx="9" fill="{BLUE}"/>'
+                  f'<text class="m" x="{mid+118}" y="{iy-41}" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">LLM</text>')
     arms = [(-62, -22), (62, -22), (-62, 22), (62, 22)]
     ill_drone = f'<g class="{p}-bob">'
     for ax, ay in arms:
@@ -397,7 +407,7 @@ def build_about():
         f'<text class="m" x="{mid+75}" y="{iy-35}" font-size="9.5" font-weight="700" fill="#ffffff" text-anchor="middle">SHORT</text></g>'
     )
     slides = [
-        ("TEACHING · COMMUNITY", "Coding Kannadiga", ["Co-founder & content lead. 90 tutorials", "on Python, Java, DSA and AI."], ill_teach),
+        ("GENAI · GRAPHRAG", "Knowledge graphs + LLMs", ["Extracts entities into a NetworkX graph,", "benchmarked against chunk-based RAG."], ill_graph),
         ("DRONES · INNOVOTSAVA 2026", "2nd Prize, Drone Fair", ["Drone navigation in AirSim + Unreal,", "RGB + pose capture, 3D reconstruction."], ill_drone),
         ("HARDWARE × AI", "AI on the factory floor", ["Spotting PCB defects with YOLOv8 and", "MobileNet-SSD, tuned for edge hardware."], ill_pcb),
     ]
@@ -415,8 +425,8 @@ def build_about():
         )
         card.append(g)
     b.append(f'<g class="{p}-up"{delay(.5)}>' + card[0] + f'<g clip-path="url(#{p}-card)">' + "".join(card[1:]) + "</g></g>")
-    desc = ("Capabilities: computer vision, generative AI, edge AI, backend APIs, data and ML. Beyond the code: "
-            "co-founder of Coding Kannadiga (90 tutorials), 2nd prize at the Innovotsava 2026 Drone Fair, "
+    desc = ("Capabilities: computer vision, generative AI, edge AI, backend APIs, data and ML. Selected work: "
+            "a GraphRAG knowledge system, drone navigation and 3D reconstruction (2nd prize, Innovotsava 2026 Drone Fair), "
             "PCB defect detection on edge hardware.")
     return svg(p, W, H, "About K G Harish Patel", desc, css, defs, "\n".join(b))
 
@@ -613,7 +623,7 @@ def build_id():
     )
     metrics = [
         ("2", "INTERNSHIPS", "ProEmbSys (Sep 2026–now)", "Tech Mindsparc (Sep–Dec 2024)"),
-        ("90", "TUTORIALS", "Coding Kannadiga", "Python · Java · DSA · AI"),
+        ("2", "CERTIFICATIONS", "JPMorgan Chase · Forage (2025)", "Intel × Digital India (2025)"),
         ("2nd", "PRIZE", "Innovotsava 2026", "Drone Fair"),
         ("4", "PCB DEFECT CLASSES", "shorts · opens", "missing solder · misalignment"),
     ]
@@ -650,7 +660,7 @@ def build_id():
         )
     b.append("</g>")
     desc = ("Hanging developer ID card for K G Harish Patel beside verified numbers as of 7 Oct 2026: 2 internships, "
-            "90 Coding Kannadiga tutorials, 2nd prize at the Innovotsava 2026 Drone Fair, 4 PCB defect classes, "
+            "2 certifications, 2nd prize at the Innovotsava 2026 Drone Fair, 4 PCB defect classes, "
             "and the latest pushes to Portfolio_01, incodevision-intern and dronetwin.")
     return svg(p, W, H, "Developer ID and dashboard", desc, css, defs, "\n".join(b))
 
