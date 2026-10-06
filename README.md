@@ -1,10 +1,10 @@
 ![K G Harish Patel — AI/ML Engineer, Computer Vision, Generative AI, Edge AI](./assets/hero.svg?v=1)
 
-![About — what I do and what I build beyond the code](./assets/about-life.svg?v=1)
+![About — what I do and what I build beyond the code](./assets/about-life.svg?v=2)
 
 ![Tech stack](./assets/stack.svg?v=1)
 
-![Developer ID and verified numbers](./assets/id-dashboard.svg?v=1)
+![Developer ID and verified numbers](./assets/id-dashboard.svg?v=2)
 
 ## Projects
 
