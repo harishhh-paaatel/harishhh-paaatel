@@ -169,36 +169,66 @@ def delay(t):
     return f' style="animation-delay:{t:.2f}s"'
 
 
+def neural_defs(p):
+    return (
+        f'<linearGradient id="{p}-eg" gradientUnits="userSpaceOnUse" x1="700" y1="0" x2="930" y2="0">'
+        f'<stop offset="0" stop-color="{BLUE}"/><stop offset="1" stop-color="{RED}"/></linearGradient>'
+        f'<filter id="{p}-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/>'
+        f'<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+        f'<radialGradient id="{p}-ng" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="{BLUE}" stop-opacity=".32"/>'
+        f'<stop offset=".7" stop-color="{BLUE}" stop-opacity=".05"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>'
+    )
+
+
 def neural_net(p):
     """Animated network inside the hero panel: signals hop layer to layer."""
-    xs, sizes, cyc, gap = [700, 768, 836, 904], [3, 5, 5, 2], 246, 44
+    xs, sizes, cyc, gap = [724, 788, 852, 912], [3, 5, 5, 2], 246, 42
     nodes = [[(x, cyc + (j - (n - 1) / 2) * gap) for j in range(n)] for x, n in zip(xs, sizes)]
-    out = (f'<text class="m" x="674" y="114" font-size="11" fill="{MUTED}">model.forward()</text>'
-           f'<circle class="{p}-pulse" cx="868" cy="110" r="6" fill="#2bd67b"/><circle cx="868" cy="110" r="3" fill="#2bd67b"/>'
-           f'<text class="m" x="880" y="114" font-size="10.5" fill="#2bd67b" letter-spacing=".8">LIVE</text>')
+    out = (f'<ellipse cx="818" cy="{cyc}" rx="150" ry="132" fill="url(#{p}-ng)"/>'
+           f'<ellipse cx="818" cy="{cyc}" rx="128" ry="112" fill="none" stroke="{BLUE}" stroke-opacity=".12" stroke-dasharray="2 6"/>'
+           f'<ellipse cx="818" cy="{cyc}" rx="92" ry="80" fill="none" stroke="{RED}" stroke-opacity=".10" stroke-dasharray="2 6"/>'
+           f'<text class="m" x="674" y="114" font-size="11" fill="{SOFT}">model<tspan fill="{BLUE}">.forward</tspan>()</text>'
+           f'<circle class="{p}-pulse" cx="874" cy="110" r="6" fill="#2bd67b"/><circle cx="874" cy="110" r="3" fill="#2bd67b"/>'
+           f'<text class="m" x="886" y="114" font-size="10.5" font-weight="600" fill="#2bd67b" letter-spacing=".8">LIVE</text>'
+           f'<rect x="672" y="126" width="260" height="1" fill="#ffffff" fill-opacity=".07"/>')
     for L in range(3):
         for a in nodes[L]:
             for c in nodes[L + 1]:
-                out += f'<path d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" stroke="{SOFT}" stroke-opacity=".13" stroke-width="1"/>'
+                out += f'<path d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" stroke="url(#{p}-eg)" stroke-opacity=".3" stroke-width="1.1"/>'
+    out += f'<g filter="url(#{p}-glow)">'
     for L in range(3):
         k = 0
         for i, a in enumerate(nodes[L]):
             for j, c in enumerate(nodes[L + 1]):
                 if (i * 3 + j * 2 + L) % 3:
                     continue
-                color = RED if L == 2 else BLUE
+                color = RED if L == 2 else ("#5aa2ff" if L == 1 else BLUE)
                 out += (f'<path class="{p}-sig" d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" pathLength="100" stroke="{color}" '
-                        f'stroke-width="2.4" stroke-linecap="round" stroke-dasharray="18 200" stroke-dashoffset="-100" fill="none"'
+                        f'stroke-width="3" stroke-linecap="round" stroke-dasharray="18 200" stroke-dashoffset="-100" fill="none"'
                         f'{delay(.8 + L*1.2 + (k % 3)*.08)}/>')
                 k += 1
+    out += "</g>"
     for L, layer in enumerate(nodes):
         color = RED if L == 3 else BLUE
         for (x, y) in layer:
-            out += (f'<circle cx="{x}" cy="{y:.1f}" r="8.5" fill="{PANEL2}" stroke="{color}" stroke-width="2"/>'
-                    f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="4" fill="{color}" fill-opacity=".9"{delay(.8 + L*1.2)}/>')
-    out += (f'<text class="m" x="904" y="{nodes[3][0][1] - 18:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">DETECT</text>'
-            f'<text class="m" x="904" y="{nodes[3][1][1] + 27:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">ANSWER</text>'
-            f'<text class="m" x="700" y="{nodes[0][0][1] - 18:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">INPUT</text>')
+            out += (f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="15" fill="{color}" fill-opacity=".25"{delay(.8 + L*1.2)}/>'
+                    f'<circle cx="{x}" cy="{y:.1f}" r="10" fill="{PANEL2}" stroke="{color}" stroke-width="2.2"/>'
+                    f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="4.5" fill="{color}" fill-opacity=".9"{delay(.8 + L*1.2)}/>')
+    # input icons: photo, chip, document
+    ix = 686
+    (_, y0), (_, y1), (_, y2) = nodes[0]
+    out += (
+        f'<rect x="{ix-10}" y="{y0-8}" width="20" height="16" rx="3" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
+        f'<path d="M{ix-8} {y0+6} l5 -6 l4 4 l3 -3 l4 5" fill="none" stroke="{SOFT}" stroke-width="1.4" stroke-linejoin="round"/>'
+        f'<circle cx="{ix+4}" cy="{y0-3}" r="1.8" fill="{SOFT}"/>'
+        f'<rect x="{ix-7}" y="{y1-7}" width="14" height="14" rx="2" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
+        + "".join(f'<path d="M{ix-11} {y1-4 + k*4} h4 M{ix+7} {y1-4 + k*4} h4" stroke="{SOFT}" stroke-width="1.3"/>' for k in range(3))
+        + f'<path d="M{ix-8} {y2-10} h11 l5 5 v15 h-16 z" fill="none" stroke="{SOFT}" stroke-width="1.6" stroke-linejoin="round"/>'
+        f'<path d="M{ix-4} {y2-1} h8 M{ix-4} {y2+3} h8 M{ix-4} {y2+7} h5" stroke="{SOFT}" stroke-width="1.2"/>'
+        + "".join(f'<path d="M{ix+15} {y} H{xs[0]-14}" stroke="{SOFT}" stroke-opacity=".35" stroke-dasharray="2 3"/>' for (_, y) in nodes[0])
+    )
+    out += (f'<text class="m" x="912" y="{nodes[3][0][1] - 20:.1f}" font-size="9.5" font-weight="600" fill="{RED}" text-anchor="middle" letter-spacing=".6">DETECT</text>'
+            f'<text class="m" x="912" y="{nodes[3][1][1] + 30:.1f}" font-size="9.5" font-weight="600" fill="{RED}" text-anchor="middle" letter-spacing=".6">ANSWER</text>')
     return out
 
 
@@ -224,7 +254,7 @@ def build_hero():
         f"@keyframes {p}-node{{0%{{fill-opacity:1}}30%,100%{{fill-opacity:.25}}}}"
         f".{p}-node{{animation:{p}-node 3.6s ease-out infinite}}"
     )
-    defs = fdefs + hairline_grad(p) + (
+    defs = fdefs + hairline_grad(p) + neural_defs(p) + (
         f'<clipPath id="{p}-n1"><rect x="40" y="126" width="600" height="104"/></clipPath>'
         f'<clipPath id="{p}-n2"><rect x="40" y="230" width="600" height="104"/></clipPath>'
         f'<clipPath id="{p}-pc"><rect x="652" y="80" width="300" height="324" rx="22"/></clipPath>'
@@ -716,65 +746,69 @@ def globe(cx, cy):
 
 
 LINKS = [
-    ("github", "GitHub", "github.com/harishhh-paaatel", "https://github.com/harishhh-paaatel",
-     lambda x, y: icon("GitHub", x, y, 24)),
-    ("linkedin", "LinkedIn", "linkedin.com/in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
-     lambda x, y: icon("LinkedIn", x, y, 24)),
+    ("github", "GitHub", "@harishhh-paaatel", "https://github.com/harishhh-paaatel",
+     lambda x, y: icon("GitHub", x, y, 22)),
+    ("linkedin", "LinkedIn", "in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
+     lambda x, y: icon("LinkedIn", x, y, 22)),
     ("email", "Email", "kgharishpatel@gmail.com", "mailto:kgharishpatel@gmail.com",
-     lambda x, y: icon("Gmail", x, y, 24)),
+     lambda x, y: icon("Gmail", x, y, 22)),
     ("portfolio", "Portfolio", "harishhh-paaatel.github.io/Portfolio_01", "https://harishhh-paaatel.github.io/Portfolio_01/",
      lambda x, y: globe(x, y)),
 ]
 
 
 def build_connect():
-    p, W, H = "cn", 1000, 400
-    fdefs, fbody = frame(p, W, H)
-    css = ENTER.format(p=p) + (
-        f"@keyframes {p}-nudge{{0%,100%{{opacity:.2;transform:translateY(0)}}35%{{opacity:1;transform:translateY(7px)}}}}"
-        f".{p}-nudge{{animation:{p}-nudge 1.5s ease-in-out infinite}}"
-    )
-    defs = fdefs + hairline_grad(p) + portrait_defs(p, 400) + (
-        f'<clipPath id="{p}-pc"><rect x="40" y="40" width="300" height="320" rx="22"/></clipPath>'
+    """Photo panel for the Connect block (floated left in the README)."""
+    p, W, H = "cn", 300, 391
+    css = ENTER.format(p=p)
+    defs = hairline_grad(p) + portrait_defs(p, 440) + (
+        f'<clipPath id="{p}-pc"><rect x="1" y="1" width="{W-2}" height="{H-2}" rx="22"/></clipPath>'
         f'<linearGradient id="{p}-pbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15204a"/><stop offset="1" stop-color="#0a1020"/></linearGradient>'
         f'<radialGradient id="{p}-halo" cx=".5" cy=".42" r=".5"><stop offset="0" stop-color="{RED}" stop-opacity=".35"/>'
         f'<stop offset=".6" stop-color="{BLUE}" stop-opacity=".1"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>'
+        f'<pattern id="{p}-dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" fill="#ffffff" opacity=".07"/></pattern>'
     )
-    b = [fbody]
-    b.append(
-        f'<g class="{p}-up"{delay(.1)}>'
-        f'<rect x="40" y="40" width="300" height="320" rx="22" fill="url(#{p}-pbg)"/>'
-        f'<g clip-path="url(#{p}-pc)"><circle cx="190" cy="180" r="200" fill="url(#{p}-halo)"/>'
-        + portrait(p, 10, 52, 400) + "</g>"
-        f'<rect x="40.5" y="40.5" width="299" height="319" rx="21.5" fill="none" stroke="url(#{p}-hl)"/>'
-        f'<rect x="56" y="310" width="158" height="32" rx="9" fill="{BLUE}"/>'
-        f'<text class="m" x="72" y="331" font-size="12" font-weight="600" fill="#ffffff" letter-spacing="1.3">SAY HELLO</text>'
+    body = (
+        f'<g class="{p}-up">'
+        f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="22" fill="url(#{p}-pbg)"/>'
+        f'<g clip-path="url(#{p}-pc)"><rect width="{W}" height="{H}" fill="url(#{p}-dots)"/>'
+        f'<circle cx="150" cy="160" r="210" fill="url(#{p}-halo)"/>'
+        + portrait(p, -41, 17, 440) + "</g>"
+        f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="21.5" fill="none" stroke="url(#{p}-hl)" stroke-width="1.5"/>'
+        f'<rect x="16" y="{H-54}" width="158" height="34" rx="9" fill="{BLUE}"/>'
+        f'<text class="m" x="33" y="{H-32}" font-size="12.5" font-weight="600" fill="#ffffff" letter-spacing="1.3">SAY HELLO</text>'
         f'</g>'
     )
-    b.append(
-        f'<g class="{p}-fade"{delay(.2)}><text class="m" x="430" y="96" font-size="13" fill="{MUTED}" letter-spacing="1.6">'
-        f'05 <tspan fill="{RED}">/</tspan> CONNECT</text></g>'
-        f'<g class="{p}-up"{delay(.3)}><text class="d" x="427" y="156" font-size="44" font-weight="700" fill="{INK}" letter-spacing="-.8">'
-        f'Have a problem worth</text>'
-        f'<text class="d" x="427" y="208" font-size="44" font-weight="700" fill="{INK}" letter-spacing="-.8">solving? '
-        f'<tspan fill="{BLUE}">Let\'s talk.</tspan></text></g>'
-        f'<g class="{p}-up"{delay(.5)}><text class="m" x="430" y="262" font-size="14" fill="{SOFT}">'
-        f'GitHub · LinkedIn · Email · Portfolio</text>'
-        f'<text class="m" x="430" y="290" font-size="13" fill="{MUTED}">Tap a card below to open it.</text></g>'
+    return svg(p, W, H, "K G Harish Patel", "Portrait of K G Harish Patel with a Say Hello tag.", css, defs, body)
+
+
+def build_connect_title():
+    """Headline that sits beside the photo, above the four link cards."""
+    p, W, H = "ct", 620, 195
+    fdefs, fbody = frame(p, W, H)
+    css = ENTER.format(p=p) + (
+        f"@keyframes {p}-nudge{{0%,100%{{opacity:.25;transform:translateY(0)}}35%{{opacity:1;transform:translateY(5px)}}}}"
+        f".{p}-nudge{{animation:{p}-nudge 1.5s ease-in-out infinite}}"
     )
+    body = [fbody,
+        f'<g class="{p}-fade"{delay(.1)}><text class="m" x="30" y="46" font-size="12.5" fill="{MUTED}" letter-spacing="1.6">'
+        f'05 <tspan fill="{RED}">/</tspan> CONNECT</text></g>'
+        f'<g class="{p}-up"{delay(.2)}><text class="d" x="28" y="98" font-size="37" font-weight="700" fill="{INK}" letter-spacing="-.7">'
+        f'Have a problem worth solving?</text>'
+        f'<text class="d" x="28" y="145" font-size="37" font-weight="700" fill="{BLUE}" letter-spacing="-.7">Let\'s talk.</text></g>'
+        f'<g class="{p}-fade"{delay(.5)}><text class="m" x="30" y="176" font-size="12" fill="{MUTED}">Tap a card below to open it</text></g>']
     for i in range(3):
-        b.append(f'<g class="{p}-fade"{delay(.8)}><g class="{p}-nudge"{delay(.6 + i*.18)}>'
-                 f'<path d="M{436 + i*22} 318 l7 7 l7 -7" fill="none" stroke="{RED if i == 2 else BLUE}" stroke-width="3" '
-                 f'stroke-linecap="round" stroke-linejoin="round"/></g></g>')
-    desc = ("Connect with K G Harish Patel on GitHub, LinkedIn, email or his portfolio. "
-            "The clickable link cards are directly below this image.")
-    return svg(p, W, H, "Connect with K G Harish Patel", desc, css, defs, "\n".join(b))
+        body.append(f'<g class="{p}-fade"{delay(.7)}><g class="{p}-nudge"{delay(.6 + i*.18)}>'
+                    f'<path d="M{236 + i*18} 167 l6 6 l6 -6" fill="none" stroke="{RED if i == 2 else BLUE}" stroke-width="2.6" '
+                    f'stroke-linecap="round" stroke-linejoin="round"/></g></g>')
+    return svg(p, W, H, "Have a problem worth solving? Let's talk.", "Connect headline; the clickable link cards follow.",
+               css, fdefs + hairline_grad(p), "\n".join(body))
 
 
 def build_link(key):
-    """One clickable card for the README; GitHub links the whole image."""
+    """Compact clickable card; the README wraps each one in its own link."""
     _, name, handle, url, ic = next(l for l in LINKS if l[0] == key)
-    p, W, H = "lk" + key[:2], 480, 112
+    p, W, H = "lk" + key[:2], 254, 92
     css = ENTER.format(p=p) + (
         f"@keyframes {p}-go{{0%,70%,100%{{transform:translate(0,0)}}80%{{transform:translate(3px,-3px)}}}}"
         f".{p}-go{{animation:{p}-go 3s ease-in-out 1s infinite}}"
@@ -783,23 +817,27 @@ def build_link(key):
         f'<linearGradient id="{p}-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1834"/>'
         f'<stop offset="1" stop-color="{NAVY}"/></linearGradient>'
     )
-    hw = mono_w(handle, 13)
+    lines = [handle] if mono_w(handle, 10.6) < W - 74 - 10 else [handle.split("/")[0], "/" + handle.split("/", 1)[1]]
+    ty = 40 if len(lines) == 1 else 35
     body = (
         f'<g class="{p}-up">'
-        f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="20" fill="url(#{p}-bg)"/>'
-        f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="19.5" fill="none" stroke="url(#{p}-hl)" stroke-width="1.5"/>'
-        f'<circle cx="56" cy="56" r="28" fill="{INK}"/>' + ic(56, 56)
-        + f'<text class="d" x="104" y="50" font-size="24" font-weight="700" fill="{INK}">{name}</text>'
-        f'<text class="m" x="104" y="76" font-size="13" fill="{MUTED}">{esc(handle)}</text>'
-        f'<g class="{p}-go">' + ext_arrow(W - 42, 24, SOFT) + "</g></g>"
+        f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="16" fill="url(#{p}-bg)"/>'
+        f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="15.5" fill="none" stroke="url(#{p}-hl)" stroke-width="1.2"/>'
+        f'<circle cx="38" cy="46" r="22" fill="{INK}"/>' + ic(38, 46)
+        + f'<text class="d" x="74" y="{ty}" font-size="20" font-weight="600" fill="{INK}">{name}</text>'
+        + "".join(f'<text class="m" x="74" y="{ty + 21 + k*14}" font-size="10.6" fill="{MUTED}">{esc(t)}</text>'
+                  for k, t in enumerate(lines))
+        + f'<g class="{p}-go">' + ext_arrow(W - 30, 14) + "</g></g>"
     )
-    assert 104 + hw < W - 16, (handle, hw)
+    for t in lines:
+        assert 74 + mono_w(t, 10.6) < W - 8, t
     return svg(p, W, H, f"{name}: {handle}", f"Opens {url}", css, defs, body)
 
 
 if __name__ == "__main__":
     for name, fn in [("hero", build_hero), ("about-life", build_about), ("stack", build_stack),
-                     ("id-dashboard", build_id), ("connect", build_connect)] + [
+                     ("id-dashboard", build_id), ("connect", build_connect),
+                     ("connect-title", build_connect_title)] + [
                      ("link-" + l[0], (lambda k: lambda: build_link(k))(l[0])) for l in LINKS]:
         data = fn()
         path = os.path.join(OUT, name + ".svg")
