@@ -169,6 +169,39 @@ def delay(t):
     return f' style="animation-delay:{t:.2f}s"'
 
 
+def neural_net(p):
+    """Animated network inside the hero panel: signals hop layer to layer."""
+    xs, sizes, cyc, gap = [700, 768, 836, 904], [3, 5, 5, 2], 246, 44
+    nodes = [[(x, cyc + (j - (n - 1) / 2) * gap) for j in range(n)] for x, n in zip(xs, sizes)]
+    out = (f'<text class="m" x="674" y="114" font-size="11" fill="{MUTED}">model.forward()</text>'
+           f'<circle class="{p}-pulse" cx="868" cy="110" r="6" fill="#2bd67b"/><circle cx="868" cy="110" r="3" fill="#2bd67b"/>'
+           f'<text class="m" x="880" y="114" font-size="10.5" fill="#2bd67b" letter-spacing=".8">LIVE</text>')
+    for L in range(3):
+        for a in nodes[L]:
+            for c in nodes[L + 1]:
+                out += f'<path d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" stroke="{SOFT}" stroke-opacity=".13" stroke-width="1"/>'
+    for L in range(3):
+        k = 0
+        for i, a in enumerate(nodes[L]):
+            for j, c in enumerate(nodes[L + 1]):
+                if (i * 3 + j * 2 + L) % 3:
+                    continue
+                color = RED if L == 2 else BLUE
+                out += (f'<path class="{p}-sig" d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" pathLength="100" stroke="{color}" '
+                        f'stroke-width="2.4" stroke-linecap="round" stroke-dasharray="18 200" stroke-dashoffset="-100" fill="none"'
+                        f'{delay(.8 + L*1.2 + (k % 3)*.08)}/>')
+                k += 1
+    for L, layer in enumerate(nodes):
+        color = RED if L == 3 else BLUE
+        for (x, y) in layer:
+            out += (f'<circle cx="{x}" cy="{y:.1f}" r="8.5" fill="{PANEL2}" stroke="{color}" stroke-width="2"/>'
+                    f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="4" fill="{color}" fill-opacity=".9"{delay(.8 + L*1.2)}/>')
+    out += (f'<text class="m" x="904" y="{nodes[3][0][1] - 18:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">DETECT</text>'
+            f'<text class="m" x="904" y="{nodes[3][1][1] + 27:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">ANSWER</text>'
+            f'<text class="m" x="700" y="{nodes[0][0][1] - 18:.1f}" font-size="9.5" fill="{SOFT}" text-anchor="middle">INPUT</text>')
+    return out
+
+
 # --------------------------------------------------------------------------- hero
 def build_hero():
     p, W, H = "hr", 1000, 480
@@ -186,8 +219,12 @@ def build_hero():
         f".{p}-role{{animation:{p}-role 12s cubic-bezier(.2,.8,.2,1) infinite both}}"
         f"@keyframes {p}-pulse{{0%,100%{{opacity:.15}}50%{{opacity:.6}}}}"
         f".{p}-pulse{{animation:{p}-pulse 2s ease-in-out infinite}}"
+        f"@keyframes {p}-sig{{0%{{stroke-dashoffset:18}}33%,100%{{stroke-dashoffset:-100}}}}"
+        f".{p}-sig{{animation:{p}-sig 3.6s linear infinite}}"
+        f"@keyframes {p}-node{{0%{{fill-opacity:1}}30%,100%{{fill-opacity:.25}}}}"
+        f".{p}-node{{animation:{p}-node 3.6s ease-out infinite}}"
     )
-    defs = fdefs + hairline_grad(p) + portrait_defs(p, 380) + (
+    defs = fdefs + hairline_grad(p) + (
         f'<clipPath id="{p}-n1"><rect x="40" y="126" width="600" height="104"/></clipPath>'
         f'<clipPath id="{p}-n2"><rect x="40" y="230" width="600" height="104"/></clipPath>'
         f'<clipPath id="{p}-pc"><rect x="652" y="80" width="300" height="324" rx="22"/></clipPath>'
@@ -254,7 +291,7 @@ def build_hero():
             f'<line x1="{652 + k*30}" y1="80" x2="{652 + k*30}" y2="404" stroke="#ffffff" stroke-opacity=".04"/>'
             for k in range(1, 10)
         )
-        + portrait(p, 637, 92, 380)
+        + neural_net(p)
         + "</g>"
         f'<rect x="652.5" y="80.5" width="299" height="323" rx="21.5" fill="none" stroke="url(#{p}-hl)"/>'
         f'<rect x="628" y="378" width="190" height="34" rx="9" fill="{RED}"/>'
@@ -527,8 +564,9 @@ def build_id():
     p, W, H = "id", 1000, 620
     fdefs, fbody = frame(p, W, H)
     PX, PY = 222, -70  # pendulum pivot (above the frame)
-    CW, CHt = 272, 372  # card size
-    card_top = 238  # relative to pivot
+    CW, CHt = 272, 452  # card size
+    card_top = 200  # relative to pivot
+    PH = CW - 40  # square photo frame
     css = ENTER.format(p=p) + (
         f"@keyframes {p}-drop{{0%{{transform:translateY(-720px)}}58%{{transform:translateY(16px)}}"
         f"74%{{transform:translateY(-7px)}}88%{{transform:translateY(3px)}}100%{{transform:translateY(0)}}}}"
@@ -549,10 +587,12 @@ def build_id():
         f'<stop offset="1" stop-color="{RED}"/></linearGradient>'
         f'<linearGradient id="{p}-foil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/>'
         f'<stop offset=".5" stop-color="#ffffff" stop-opacity=".22"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>'
-        f'<linearGradient id="{p}-ph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#18244f"/><stop offset="1" stop-color="#0b1124"/></linearGradient>'
+        f'<linearGradient id="{p}-ph" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15204a"/><stop offset="1" stop-color="#0a1020"/></linearGradient>'
+        f'<radialGradient id="{p}-halo" cx=".5" cy=".42" r=".5"><stop offset="0" stop-color="{RED}" stop-opacity=".35"/>'
+        f'<stop offset=".6" stop-color="{BLUE}" stop-opacity=".1"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>'
         f'<clipPath id="{p}-cardc"><rect x="{-CW/2}" y="{card_top}" width="{CW}" height="{CHt}" rx="20"/></clipPath>'
-        f'<clipPath id="{p}-phc"><rect x="{-CW/2+20}" y="{card_top+58}" width="{CW-40}" height="150" rx="12"/></clipPath>'
-        + portrait_defs(p, 252)
+        f'<clipPath id="{p}-phc"><rect x="{-CW/2+20}" y="{card_top+58}" width="{PH}" height="{PH}" rx="12"/></clipPath>'
+        + portrait_defs(p, 309)
     )
     b = [fbody]
     # lanyard + card, drawn relative to the pivot
@@ -574,24 +614,25 @@ def build_id():
     c.append(f'<text class="m" x="{x0+18}" y="{card_top+31}" font-size="9.5" font-weight="600" fill="#ffffff" letter-spacing="1.4">DEV ID</text>')
     c.append(f'<text class="m" x="{-x0-18}" y="{card_top+31}" font-size="9.5" font-weight="600" fill="#ffffff" text-anchor="end" letter-spacing="1.4">2026</text>')
     c.append(
-        f'<rect x="{x0+20}" y="{card_top+58}" width="{CW-40}" height="150" rx="12" fill="url(#{p}-ph)"/>'
-        f'<g clip-path="url(#{p}-phc)">{portrait(p, x0 + 10, card_top + 62, 252)}</g>'
-        f'<rect x="{x0+20.5}" y="{card_top+58.5}" width="{CW-41}" height="149" rx="11.5" fill="none" stroke="url(#{p}-hl)"/>'
+        f'<rect x="{x0+20}" y="{card_top+58}" width="{PH}" height="{PH}" rx="12" fill="url(#{p}-ph)"/>'
+        f'<g clip-path="url(#{p}-phc)"><circle cx="0" cy="{card_top+58+PH*.45:.0f}" r="{PH*.62:.0f}" fill="url(#{p}-halo)"/>'
+        f'{portrait(p, -134, card_top + 64, 309)}</g>'
+        f'<rect x="{x0+20.5}" y="{card_top+58.5}" width="{PH-1}" height="{PH-1}" rx="11.5" fill="none" stroke="url(#{p}-hl)"/>'
     )
     c.append(
-        f'<text class="d" x="{x0+20}" y="{card_top+240}" font-size="24" font-weight="800" fill="{INK}" letter-spacing="-.3">K G Harish Patel</text>'
-        f'<text class="m" x="{x0+20}" y="{card_top+260}" font-size="10.5" fill="{BLUE}" letter-spacing="1.1">AI/ML · CV · GENAI · EDGE AI</text>'
+        f'<text class="d" x="{x0+20}" y="{card_top+322}" font-size="24" font-weight="800" fill="{INK}" letter-spacing="-.3">K G Harish Patel</text>'
+        f'<text class="m" x="{x0+20}" y="{card_top+342}" font-size="10.5" fill="{BLUE}" letter-spacing="1.1">AI/ML · CV · GENAI · EDGE AI</text>'
     )
     rows = [("ROLE", "Project Intern, ProEmbSys"), ("STUDY", "B.E. CSE '27 · MIT Mysore")]
     for i, (k_, v) in enumerate(rows):
-        yy = card_top + 286 + i * 20
+        yy = card_top + 368 + i * 20
         c.append(
             f'<text class="m" x="{x0+20}" y="{yy}" font-size="9.5" fill="{MUTED}" letter-spacing="1">{k_}</text>'
             f'<text class="m" x="{x0+72}" y="{yy}" font-size="10.5" fill="{SOFT}">{esc(v)}</text>'
         )
     # barcode from the username hash
     hsh = hashlib.sha256(b"harishhh-paaatel").digest()
-    bx, by = x0 + 20, card_top + 322
+    bx, by = x0 + 20, card_top + 404
     for byte in hsh[:22]:
         for wbit in (byte & 3, (byte >> 2) & 3):
             w_ = 1 + wbit * 0.8
@@ -599,7 +640,7 @@ def build_id():
                 break
             c.append(f'<rect x="{bx:.1f}" y="{by}" width="{w_:.1f}" height="26" fill="{INK}"/>')
             bx += w_ + 1.6 + ((byte >> 4) & 1)
-    c.append(f'<text class="m" x="{-x0-20}" y="{card_top+340}" font-size="9.5" fill="{MUTED}" text-anchor="end">@harishhh-paaatel</text>')
+    c.append(f'<text class="m" x="{-x0-20}" y="{card_top+422}" font-size="9.5" fill="{MUTED}" text-anchor="end">@harishhh-paaatel</text>')
     # foil sweep (outer group moves, inner band is skewed)
     c.append(
         f'<g class="{p}-sweep"><rect x="{x0-190}" y="{card_top-20}" width="110" height="{CHt+40}" '
@@ -666,15 +707,35 @@ def build_id():
 
 
 # --------------------------------------------------------------------------- connect
+def globe(cx, cy):
+    return (
+        f'<circle cx="{cx}" cy="{cy}" r="10" fill="none" stroke="{BLUE}" stroke-width="2"/>'
+        f'<ellipse cx="{cx}" cy="{cy}" rx="4.5" ry="10" fill="none" stroke="{BLUE}" stroke-width="1.8"/>'
+        f'<path d="M{cx-10} {cy} H{cx+10} M{cx-8.5} {cy-5} H{cx+8.5} M{cx-8.5} {cy+5} H{cx+8.5}" stroke="{BLUE}" stroke-width="1.4"/>'
+    )
+
+
+LINKS = [
+    ("github", "GitHub", "github.com/harishhh-paaatel", "https://github.com/harishhh-paaatel",
+     lambda x, y: icon("GitHub", x, y, 24)),
+    ("linkedin", "LinkedIn", "linkedin.com/in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
+     lambda x, y: icon("LinkedIn", x, y, 24)),
+    ("email", "Email", "kgharishpatel@gmail.com", "mailto:kgharishpatel@gmail.com",
+     lambda x, y: icon("Gmail", x, y, 24)),
+    ("portfolio", "Portfolio", "harishhh-paaatel.github.io/Portfolio_01", "https://harishhh-paaatel.github.io/Portfolio_01/",
+     lambda x, y: globe(x, y)),
+]
+
+
 def build_connect():
-    p, W, H = "cn", 1000, 440
+    p, W, H = "cn", 1000, 400
     fdefs, fbody = frame(p, W, H)
     css = ENTER.format(p=p) + (
-        f"@keyframes {p}-nudge{{0%,100%{{opacity:.2;transform:translateX(0)}}35%{{opacity:1;transform:translateX(7px)}}}}"
+        f"@keyframes {p}-nudge{{0%,100%{{opacity:.2;transform:translateY(0)}}35%{{opacity:1;transform:translateY(7px)}}}}"
         f".{p}-nudge{{animation:{p}-nudge 1.5s ease-in-out infinite}}"
     )
     defs = fdefs + hairline_grad(p) + portrait_defs(p, 400) + (
-        f'<clipPath id="{p}-pc"><rect x="40" y="40" width="300" height="360" rx="22"/></clipPath>'
+        f'<clipPath id="{p}-pc"><rect x="40" y="40" width="300" height="320" rx="22"/></clipPath>'
         f'<linearGradient id="{p}-pbg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15204a"/><stop offset="1" stop-color="#0a1020"/></linearGradient>'
         f'<radialGradient id="{p}-halo" cx=".5" cy=".42" r=".5"><stop offset="0" stop-color="{RED}" stop-opacity=".35"/>'
         f'<stop offset=".6" stop-color="{BLUE}" stop-opacity=".1"/><stop offset="1" stop-color="{BLUE}" stop-opacity="0"/></radialGradient>'
@@ -682,58 +743,64 @@ def build_connect():
     b = [fbody]
     b.append(
         f'<g class="{p}-up"{delay(.1)}>'
-        f'<rect x="40" y="40" width="300" height="360" rx="22" fill="url(#{p}-pbg)"/>'
-        f'<g clip-path="url(#{p}-pc)"><circle cx="190" cy="190" r="200" fill="url(#{p}-halo)"/>'
-        + portrait(p, 10, 62, 400) + "</g>"
-        f'<rect x="40.5" y="40.5" width="299" height="359" rx="21.5" fill="none" stroke="url(#{p}-hl)"/>'
-        f'<rect x="56" y="350" width="158" height="32" rx="9" fill="{BLUE}"/>'
-        f'<text class="m" x="72" y="371" font-size="12" font-weight="600" fill="#ffffff" letter-spacing="1.3">SAY HELLO</text>'
+        f'<rect x="40" y="40" width="300" height="320" rx="22" fill="url(#{p}-pbg)"/>'
+        f'<g clip-path="url(#{p}-pc)"><circle cx="190" cy="180" r="200" fill="url(#{p}-halo)"/>'
+        + portrait(p, 10, 52, 400) + "</g>"
+        f'<rect x="40.5" y="40.5" width="299" height="319" rx="21.5" fill="none" stroke="url(#{p}-hl)"/>'
+        f'<rect x="56" y="310" width="158" height="32" rx="9" fill="{BLUE}"/>'
+        f'<text class="m" x="72" y="331" font-size="12" font-weight="600" fill="#ffffff" letter-spacing="1.3">SAY HELLO</text>'
         f'</g>'
     )
-    for i in range(3):
-        b.append(f'<g class="{p}-fade"{delay(.9)}><g class="{p}-nudge"{delay(.6 + i*.18)}>'
-                 + chevron(362 + i*16, 220, 1.4, RED if i == 2 else BLUE, 3) + "</g></g>")
     b.append(
-        f'<g class="{p}-fade"{delay(.2)}><text class="m" x="430" y="70" font-size="13" fill="{MUTED}" letter-spacing="1.6">'
+        f'<g class="{p}-fade"{delay(.2)}><text class="m" x="430" y="96" font-size="13" fill="{MUTED}" letter-spacing="1.6">'
         f'05 <tspan fill="{RED}">/</tspan> CONNECT</text></g>'
-        f'<g class="{p}-up"{delay(.3)}><text class="d" x="428" y="116" font-size="34" font-weight="700" fill="{INK}" letter-spacing="-.6">'
-        f'Have a problem worth solving?</text>'
-        f'<text class="d" x="428" y="156" font-size="34" font-weight="700" fill="{BLUE}" letter-spacing="-.6">Let\'s talk.</text></g>'
+        f'<g class="{p}-up"{delay(.3)}><text class="d" x="427" y="156" font-size="44" font-weight="700" fill="{INK}" letter-spacing="-.8">'
+        f'Have a problem worth</text>'
+        f'<text class="d" x="427" y="208" font-size="44" font-weight="700" fill="{INK}" letter-spacing="-.8">solving? '
+        f'<tspan fill="{BLUE}">Let\'s talk.</tspan></text></g>'
+        f'<g class="{p}-up"{delay(.5)}><text class="m" x="430" y="262" font-size="14" fill="{SOFT}">'
+        f'GitHub · LinkedIn · Email · Portfolio</text>'
+        f'<text class="m" x="430" y="290" font-size="13" fill="{MUTED}">Tap a card below to open it.</text></g>'
     )
-    globe = lambda cx, cy: (
-        f'<circle cx="{cx}" cy="{cy}" r="10" fill="none" stroke="{BLUE}" stroke-width="2"/>'
-        f'<ellipse cx="{cx}" cy="{cy}" rx="4.5" ry="10" fill="none" stroke="{BLUE}" stroke-width="1.8"/>'
-        f'<path d="M{cx-10} {cy} H{cx+10} M{cx-8.5} {cy-5} H{cx+8.5} M{cx-8.5} {cy+5} H{cx+8.5}" stroke="{BLUE}" stroke-width="1.4"/>'
-    )
-    cards = [
-        ("GitHub", "@harishhh-paaatel", lambda x, y: icon("GitHub", x, y, 22)),
-        ("LinkedIn", "in/kg-harish-patel", lambda x, y: icon("LinkedIn", x, y, 22)),
-        ("Email", "kgharishpatel@gmail.com", lambda x, y: icon("Gmail", x, y, 22)),
-        ("Portfolio", "github.io/Portfolio_01", globe),
-    ]
-    cw, chh, gx, gy = 254, 92, 14, 16
-    for i, (name, handle, ic) in enumerate(cards):
-        x = 430 + (i % 2) * (cw + gx)
-        y = 196 + (i // 2) * (chh + gy)
-        b.append(
-            f'<g class="{p}-up"{delay(.5 + i*.12)}>' + hairline_card(p, "k", x, y, cw, chh, rx=16)
-            + f'<circle cx="{x+40}" cy="{y+46}" r="22" fill="{INK}"/>' + ic(x + 40, y + 46)
-            + f'<text class="d" x="{x+76}" y="{y+42}" font-size="20" font-weight="600" fill="{INK}">{name}</text>'
-            f'<text class="m" x="{x+76}" y="{y+64}" font-size="11.5" fill="{MUTED}">{esc(handle)}</text>'
-            + ext_arrow(x + cw - 30, y + 16) + "</g>"
-        )
-    b.append(
-        f'<g class="{p}-fade"{delay(1.1)}><text class="m" x="430" y="414" font-size="11" fill="{MUTED}">'
-        f'Links are right below this image <tspan fill="{BLUE}">↓</tspan></text></g>'
-    )
-    desc = ("Connect with K G Harish Patel: GitHub @harishhh-paaatel, LinkedIn in/kg-harish-patel, "
-            "email kgharishpatel@gmail.com, portfolio harishhh-paaatel.github.io/Portfolio_01. Clickable links follow below the image.")
+    for i in range(3):
+        b.append(f'<g class="{p}-fade"{delay(.8)}><g class="{p}-nudge"{delay(.6 + i*.18)}>'
+                 f'<path d="M{436 + i*22} 318 l7 7 l7 -7" fill="none" stroke="{RED if i == 2 else BLUE}" stroke-width="3" '
+                 f'stroke-linecap="round" stroke-linejoin="round"/></g></g>')
+    desc = ("Connect with K G Harish Patel on GitHub, LinkedIn, email or his portfolio. "
+            "The clickable link cards are directly below this image.")
     return svg(p, W, H, "Connect with K G Harish Patel", desc, css, defs, "\n".join(b))
+
+
+def build_link(key):
+    """One clickable card for the README; GitHub links the whole image."""
+    _, name, handle, url, ic = next(l for l in LINKS if l[0] == key)
+    p, W, H = "lk" + key[:2], 480, 112
+    css = ENTER.format(p=p) + (
+        f"@keyframes {p}-go{{0%,70%,100%{{transform:translate(0,0)}}80%{{transform:translate(3px,-3px)}}}}"
+        f".{p}-go{{animation:{p}-go 3s ease-in-out 1s infinite}}"
+    )
+    defs = hairline_grad(p) + (
+        f'<linearGradient id="{p}-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f1834"/>'
+        f'<stop offset="1" stop-color="{NAVY}"/></linearGradient>'
+    )
+    hw = mono_w(handle, 13)
+    body = (
+        f'<g class="{p}-up">'
+        f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="20" fill="url(#{p}-bg)"/>'
+        f'<rect x="1.5" y="1.5" width="{W-3}" height="{H-3}" rx="19.5" fill="none" stroke="url(#{p}-hl)" stroke-width="1.5"/>'
+        f'<circle cx="56" cy="56" r="28" fill="{INK}"/>' + ic(56, 56)
+        + f'<text class="d" x="104" y="50" font-size="24" font-weight="700" fill="{INK}">{name}</text>'
+        f'<text class="m" x="104" y="76" font-size="13" fill="{MUTED}">{esc(handle)}</text>'
+        f'<g class="{p}-go">' + ext_arrow(W - 42, 24, SOFT) + "</g></g>"
+    )
+    assert 104 + hw < W - 16, (handle, hw)
+    return svg(p, W, H, f"{name}: {handle}", f"Opens {url}", css, defs, body)
 
 
 if __name__ == "__main__":
     for name, fn in [("hero", build_hero), ("about-life", build_about), ("stack", build_stack),
-                     ("id-dashboard", build_id), ("connect", build_connect)]:
+                     ("id-dashboard", build_id), ("connect", build_connect)] + [
+                     ("link-" + l[0], (lambda k: lambda: build_link(k))(l[0])) for l in LINKS]:
         data = fn()
         path = os.path.join(OUT, name + ".svg")
         with open(path, "w", encoding="utf-8") as f:

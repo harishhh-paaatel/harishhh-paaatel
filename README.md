@@ -1,10 +1,10 @@
-![K G Harish Patel — AI/ML Engineer, Computer Vision, Generative AI, Edge AI](./assets/hero.svg?v=1)
+![K G Harish Patel — AI/ML Engineer, Computer Vision, Generative AI, Edge AI](./assets/hero.svg?v=2)
 
 ![About — what I do and what I build beyond the code](./assets/about-life.svg?v=2)
 
 ![Tech stack](./assets/stack.svg?v=1)
 
-![Developer ID and verified numbers](./assets/id-dashboard.svg?v=2)
+![Developer ID and verified numbers](./assets/id-dashboard.svg?v=3)
 
 ## Projects
 
@@ -18,11 +18,13 @@
 
 My **GraphRAG Knowledge System** and **PCB Defect Detection & Edge AI** work are written up on my [portfolio](https://harishhh-paaatel.github.io/Portfolio_01/).
 
-![Connect with me](./assets/connect.svg?v=1)
+![Connect with me](./assets/connect.svg?v=2)
 
 <p align="center">
-  <a href="https://github.com/harishhh-paaatel"><b>GitHub</b></a> ·
-  <a href="https://www.linkedin.com/in/kg-harish-patel"><b>LinkedIn</b></a> ·
-  <a href="mailto:kgharishpatel@gmail.com"><b>Email</b></a> ·
-  <a href="https://harishhh-paaatel.github.io/Portfolio_01/"><b>Portfolio</b></a>
+  <a href="https://github.com/harishhh-paaatel"><img src="./assets/link-github.svg?v=1" alt="GitHub: github.com/harishhh-paaatel" width="48%"></a>
+  <a href="https://www.linkedin.com/in/kg-harish-patel"><img src="./assets/link-linkedin.svg?v=1" alt="LinkedIn: linkedin.com/in/kg-harish-patel" width="48%"></a>
+</p>
+<p align="center">
+  <a href="mailto:kgharishpatel@gmail.com"><img src="./assets/link-email.svg?v=1" alt="Email: kgharishpatel@gmail.com" width="48%"></a>
+  <a href="https://harishhh-paaatel.github.io/Portfolio_01/"><img src="./assets/link-portfolio.svg?v=1" alt="Portfolio: harishhh-paaatel.github.io/Portfolio_01" width="48%"></a>
 </p>
