@@ -180,56 +180,105 @@ def neural_defs(p):
     )
 
 
-def neural_net(p):
-    """Animated network inside the hero panel: signals hop layer to layer."""
-    xs, sizes, cyc, gap = [724, 788, 852, 912], [3, 5, 5, 2], 246, 42
-    nodes = [[(x, cyc + (j - (n - 1) / 2) * gap) for j in range(n)] for x, n in zip(xs, sizes)]
-    out = (f'<ellipse cx="818" cy="{cyc}" rx="150" ry="132" fill="url(#{p}-ng)"/>'
-           f'<ellipse cx="818" cy="{cyc}" rx="128" ry="112" fill="none" stroke="{BLUE}" stroke-opacity=".12" stroke-dasharray="2 6"/>'
-           f'<ellipse cx="818" cy="{cyc}" rx="92" ry="80" fill="none" stroke="{RED}" stroke-opacity=".10" stroke-dasharray="2 6"/>'
-           f'<text class="m" x="674" y="114" font-size="11" fill="{SOFT}">model<tspan fill="{BLUE}">.forward</tspan>()</text>'
-           f'<circle class="{p}-pulse" cx="874" cy="110" r="6" fill="#2bd67b"/><circle cx="874" cy="110" r="3" fill="#2bd67b"/>'
-           f'<text class="m" x="886" y="114" font-size="10.5" font-weight="600" fill="#2bd67b" letter-spacing=".8">LIVE</text>'
-           f'<rect x="672" y="126" width="260" height="1" fill="#ffffff" fill-opacity=".07"/>')
-    for L in range(3):
-        for a in nodes[L]:
-            for c in nodes[L + 1]:
-                out += f'<path d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" stroke="url(#{p}-eg)" stroke-opacity=".3" stroke-width="1.1"/>'
-    out += f'<g filter="url(#{p}-glow)">'
-    for L in range(3):
-        k = 0
-        for i, a in enumerate(nodes[L]):
-            for j, c in enumerate(nodes[L + 1]):
-                if (i * 3 + j * 2 + L) % 3:
-                    continue
-                color = RED if L == 2 else ("#5aa2ff" if L == 1 else BLUE)
-                out += (f'<path class="{p}-sig" d="M{a[0]} {a[1]:.1f} L{c[0]} {c[1]:.1f}" pathLength="100" stroke="{color}" '
-                        f'stroke-width="3" stroke-linecap="round" stroke-dasharray="18 200" stroke-dashoffset="-100" fill="none"'
-                        f'{delay(.8 + L*1.2 + (k % 3)*.08)}/>')
-                k += 1
-    out += "</g>"
-    for L, layer in enumerate(nodes):
-        color = RED if L == 3 else BLUE
-        for (x, y) in layer:
-            out += (f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="15" fill="{color}" fill-opacity=".25"{delay(.8 + L*1.2)}/>'
-                    f'<circle cx="{x}" cy="{y:.1f}" r="10" fill="{PANEL2}" stroke="{color}" stroke-width="2.2"/>'
-                    f'<circle class="{p}-node" cx="{x}" cy="{y:.1f}" r="4.5" fill="{color}" fill-opacity=".9"{delay(.8 + L*1.2)}/>')
-    # input icons: photo, chip, document
-    ix = 686
-    (_, y0), (_, y1), (_, y2) = nodes[0]
-    out += (
-        f'<rect x="{ix-10}" y="{y0-8}" width="20" height="16" rx="3" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
-        f'<path d="M{ix-8} {y0+6} l5 -6 l4 4 l3 -3 l4 5" fill="none" stroke="{SOFT}" stroke-width="1.4" stroke-linejoin="round"/>'
-        f'<circle cx="{ix+4}" cy="{y0-3}" r="1.8" fill="{SOFT}"/>'
-        f'<rect x="{ix-7}" y="{y1-7}" width="14" height="14" rx="2" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
-        + "".join(f'<path d="M{ix-11} {y1-4 + k*4} h4 M{ix+7} {y1-4 + k*4} h4" stroke="{SOFT}" stroke-width="1.3"/>' for k in range(3))
-        + f'<path d="M{ix-8} {y2-10} h11 l5 5 v15 h-16 z" fill="none" stroke="{SOFT}" stroke-width="1.6" stroke-linejoin="round"/>'
-        f'<path d="M{ix-4} {y2-1} h8 M{ix-4} {y2+3} h8 M{ix-4} {y2+7} h5" stroke="{SOFT}" stroke-width="1.2"/>'
-        + "".join(f'<path d="M{ix+15} {y} H{xs[0]-14}" stroke="{SOFT}" stroke-opacity=".35" stroke-dasharray="2 3"/>' for (_, y) in nodes[0])
-    )
-    out += (f'<text class="m" x="912" y="{nodes[3][0][1] - 20:.1f}" font-size="9.5" font-weight="600" fill="{RED}" text-anchor="middle" letter-spacing=".6">DETECT</text>'
-            f'<text class="m" x="912" y="{nodes[3][1][1] + 30:.1f}" font-size="9.5" font-weight="600" fill="{RED}" text-anchor="middle" letter-spacing=".6">ANSWER</text>')
-    return out
+GREEN = "#2bd67b"
+
+
+def stack_pipelines(p, t0=1.0, slot=4.0):
+    """Hero panel: tech-stack nodes; three real project pipelines light up in turn."""
+    cy = 222
+    col = {"in": 676, "b": 732, "c": 792, "d": 852, "out": 912}
+    N = {  # name -> (x, y, kind)
+        "chip": (col["in"], cy - 42, "in"), "doc": (col["in"], cy, "in"), "table": (col["in"], cy + 42, "in"),
+        "Python": (col["b"], cy - 42, "icon"), "OpenCV": (col["b"], cy, "icon"), "pandas": (col["b"], cy + 42, "icon"),
+        "PyTorch": (col["c"], cy - 84, "icon"), "Ultralytics": (col["c"], cy - 42, "icon"), "LLM": (col["c"], cy, "llm"),
+        "NumPy": (col["c"], cy + 42, "icon"), "scikit-learn": (col["c"], cy + 84, "icon"),
+        "FastAPI": (col["d"], cy - 42, "icon"), "TensorFlow": (col["d"], cy, "icon"), "Jupyter": (col["d"], cy + 42, "icon"),
+        "ANSWER": (col["out"], cy - 42, "out"), "DETECT": (col["out"], cy, "out"), "PREDICT": (col["out"], cy + 42, "out"),
+    }
+    cols = [["chip", "doc", "table"], ["Python", "OpenCV", "pandas"],
+            ["PyTorch", "Ultralytics", "LLM", "NumPy", "scikit-learn"], ["FastAPI", "TensorFlow", "Jupyter"],
+            ["ANSWER", "DETECT", "PREDICT"]]
+    pipes = [
+        (BLUE, ["chip", "OpenCV", "Ultralytics", "TensorFlow", "DETECT"], "PCB defect detection", "OpenCV › YOLOv8 › TF Lite"),
+        (RED, ["doc", "Python", "LLM", "FastAPI", "ANSWER"], "GraphRAG knowledge system", "Python › LLM › FastAPI"),
+        (GREEN, ["table", "pandas", "scikit-learn", "Jupyter", "PREDICT"], "House-price model", "pandas › scikit-learn › Jupyter"),
+    ]
+    hop, first = 0.7, 0.3
+    o = (f'<ellipse cx="804" cy="{cy}" rx="150" ry="128" fill="url(#{p}-ng)"/>'
+         f'<text class="m" x="674" y="106" font-size="11" fill="{SOFT}">stack<tspan fill="{BLUE}">.run</tspan>()</text>'
+         f'<circle class="{p}-pulse" cx="874" cy="102" r="6" fill="{GREEN}"/><circle cx="874" cy="102" r="3" fill="{GREEN}"/>'
+         f'<text class="m" x="886" y="106" font-size="10.5" font-weight="600" fill="{GREEN}" letter-spacing=".8">LIVE</text>')
+    # faint mesh
+    for A, Bc in zip(cols, cols[1:]):
+        for a in A:
+            for b_ in Bc:
+                (x1, y1, _), (x2, y2, _) = N[a], N[b_]
+                o += f'<path d="M{x1} {y1} L{x2} {y2}" stroke="url(#{p}-eg)" stroke-opacity=".16" stroke-width="1"/>'
+    # pipeline trails (base: first pipeline lit, for renderers without animation)
+    for k, (c, path, _, _) in enumerate(pipes):
+        d = "M" + " L".join(f"{N[n][0]} {N[n][1]}" for n in path)
+        o += (f'<path class="{p}-trail" d="{d}" fill="none" stroke="{c}" stroke-width="2.4" stroke-linejoin="round" '
+              f'opacity="{1 if k == 0 else 0}" filter="url(#{p}-glow)"{delay(t0 + k*slot)}/>')
+    # nodes
+    def node(name):
+        x, y, kind = N[name]
+        if kind == "icon":
+            return (f'<circle cx="{x}" cy="{y}" r="15" fill="{INK}"/>' + icon(name, x, y, 17))
+        if kind == "llm":
+            return (f'<circle cx="{x}" cy="{y}" r="15" fill="#1b2756" stroke="{SOFT}" stroke-opacity=".6" stroke-width="1.2"/>'
+                    f'<text class="m" x="{x}" y="{y+3.3}" font-size="9" font-weight="700" fill="{INK}" text-anchor="middle">LLM</text>')
+        if kind == "out":
+            return (f'<rect x="{x-25}" y="{y-9}" width="50" height="18" rx="9" fill="{PANEL2}" stroke="{SOFT}" stroke-opacity=".35"/>'
+                    f'<text class="m" x="{x}" y="{y+3.2}" font-size="8.5" font-weight="700" fill="{SOFT}" text-anchor="middle" letter-spacing=".5">{name}</text>')
+        # input glyphs
+        if name == "chip":
+            return (f'<rect x="{x-7}" y="{y-7}" width="14" height="14" rx="2" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
+                    + "".join(f'<path d="M{x-11} {y-4 + k*4} h4 M{x+7} {y-4 + k*4} h4" stroke="{SOFT}" stroke-width="1.3"/>' for k in range(3)))
+        if name == "doc":
+            return (f'<path d="M{x-8} {y-10} h11 l5 5 v15 h-16 z" fill="none" stroke="{SOFT}" stroke-width="1.6" stroke-linejoin="round"/>'
+                    f'<path d="M{x-4} {y-1} h8 M{x-4} {y+3} h8 M{x-4} {y+7} h5" stroke="{SOFT}" stroke-width="1.2"/>')
+        return (f'<rect x="{x-9}" y="{y-8}" width="18" height="16" rx="2" fill="none" stroke="{SOFT}" stroke-width="1.6"/>'
+                f'<path d="M{x-9} {y-3} h18 M{x-9} {y+2.5} h18 M{x-3} {y-8} v16" stroke="{SOFT}" stroke-width="1.2"/>')
+    # packets travel under the nodes
+    o += f'<g filter="url(#{p}-glow)">'
+    for k, (c, path, _, _) in enumerate(pipes):
+        start = t0 + k * slot
+        for sidx, name in enumerate(path[:-1]):
+            x, y, _ = N[name]
+            x2, y2, _ = N[path[sidx + 1]]
+            o += (f'<path class="{p}-pk" d="M{x} {y} L{x2} {y2}" pathLength="100" stroke="#ffffff" stroke-width="3.4" '
+                  f'stroke-linecap="round" stroke-dasharray="22 200" stroke-dashoffset="-100" fill="none"'
+                  f'{delay(start + first + sidx * hop)}/>')
+    o += "</g>"
+    for name in N:
+        o += node(name)
+    # glow rings per pipeline, on top
+    o += f'<g filter="url(#{p}-glow)">'
+    for k, (c, path, _, _) in enumerate(pipes):
+        start = t0 + k * slot
+        for sidx, name in enumerate(path):
+            x, y, kind = N[name]
+            dl = delay(start + first + sidx * hop - .05)
+            op = 1 if k == 0 else 0
+            if kind == "out":
+                o += (f'<g class="{p}-lit" opacity="{op}"{dl}><rect x="{x-25}" y="{y-9}" width="50" height="18" rx="9" fill="{c}"/>'
+                      f'<text class="m" x="{x}" y="{y+3.2}" font-size="8.5" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing=".5">{name}</text></g>')
+            else:
+                o += (f'<circle class="{p}-lit" cx="{x}" cy="{y}" r="19.5" fill="none" stroke="{c}" '
+                      f'stroke-width="2.6" opacity="{op}"{dl}/>')
+    o += "</g>"
+    # progress + captions
+    px0, pw, pg = 672, 260, 8
+    sw = (pw - 2 * pg) / 3
+    for k, (c, _, title, chain) in enumerate(pipes):
+        sx = px0 + k * (sw + pg)
+        o += (f'<rect x="{sx:.1f}" y="334" width="{sw:.1f}" height="3" rx="1.5" fill="#ffffff" fill-opacity=".1"/>'
+              f'<g transform="translate({sx:.1f} 334)"><rect class="{p}-s{k}" width="{sw:.1f}" height="3" rx="1.5" fill="{c}" '
+              f'transform="scale({1 if k == 0 else 0} 1)"{delay(t0)}/></g>')
+        o += (f'<g class="{p}-cap" opacity="{1 if k == 0 else 0}"{delay(t0 + k*slot)}>'
+              f'<text class="d" x="672" y="354" font-size="14" font-weight="700" fill="{INK}">{esc(title)}</text>'
+              f'<text class="m" x="672" y="370" font-size="10.5" fill="{c}">{esc(chain)}</text></g>')
+    return o
 
 
 # --------------------------------------------------------------------------- hero
@@ -249,10 +298,19 @@ def build_hero():
         f".{p}-role{{animation:{p}-role 12s cubic-bezier(.2,.8,.2,1) infinite both}}"
         f"@keyframes {p}-pulse{{0%,100%{{opacity:.15}}50%{{opacity:.6}}}}"
         f".{p}-pulse{{animation:{p}-pulse 2s ease-in-out infinite}}"
-        f"@keyframes {p}-sig{{0%{{stroke-dashoffset:18}}33%,100%{{stroke-dashoffset:-100}}}}"
-        f".{p}-sig{{animation:{p}-sig 3.6s linear infinite}}"
-        f"@keyframes {p}-node{{0%{{fill-opacity:1}}30%,100%{{fill-opacity:.25}}}}"
-        f".{p}-node{{animation:{p}-node 3.6s ease-out infinite}}"
+        f"@keyframes {p}-pk{{0%{{stroke-dashoffset:22}}5.5%,100%{{stroke-dashoffset:-100}}}}"
+        f".{p}-pk{{animation:{p}-pk 12s linear infinite}}"
+        f"@keyframes {p}-trail{{0%{{opacity:0}}4%{{opacity:1}}30%{{opacity:1}}33.3%{{opacity:0}}100%{{opacity:0}}}}"
+        f".{p}-trail{{animation:{p}-trail 12s ease-in-out infinite both}}"
+        f"@keyframes {p}-lit{{0%{{opacity:0}}1.5%{{opacity:1}}19%{{opacity:1}}22%{{opacity:0}}100%{{opacity:0}}}}"
+        f".{p}-lit{{animation:{p}-lit 12s ease-out infinite both}}"
+        f"@keyframes {p}-cap{{0%{{opacity:0;transform:translateY(8px)}}3%{{opacity:1;transform:none}}"
+        f"30%{{opacity:1;transform:none}}33.3%{{opacity:0;transform:translateY(-8px)}}100%{{opacity:0}}}}"
+        f".{p}-cap{{animation:{p}-cap 12s ease-in-out infinite both}}"
+        f"@keyframes {p}-seg0{{0%{{transform:scaleX(0)}}33.33%{{transform:scaleX(1)}}99.5%{{transform:scaleX(1)}}100%{{transform:scaleX(0)}}}}"
+        f"@keyframes {p}-seg1{{0%,33.33%{{transform:scaleX(0)}}66.66%{{transform:scaleX(1)}}99.5%{{transform:scaleX(1)}}100%{{transform:scaleX(0)}}}}"
+        f"@keyframes {p}-seg2{{0%,66.66%{{transform:scaleX(0)}}99.5%{{transform:scaleX(1)}}100%{{transform:scaleX(0)}}}}"
+        + "".join(f".{p}-s{i}{{animation:{p}-seg{i} 12s linear infinite both}}" for i in range(3))
     )
     defs = fdefs + hairline_grad(p) + neural_defs(p) + (
         f'<clipPath id="{p}-n1"><rect x="40" y="126" width="600" height="104"/></clipPath>'
@@ -321,7 +379,7 @@ def build_hero():
             f'<line x1="{652 + k*30}" y1="80" x2="{652 + k*30}" y2="404" stroke="#ffffff" stroke-opacity=".04"/>'
             for k in range(1, 10)
         )
-        + neural_net(p)
+        + stack_pipelines(p)
         + "</g>"
         f'<rect x="652.5" y="80.5" width="299" height="323" rx="21.5" fill="none" stroke="url(#{p}-hl)"/>'
         f'<rect x="628" y="378" width="190" height="34" rx="9" fill="{RED}"/>'
@@ -746,9 +804,9 @@ def globe(cx, cy):
 
 
 LINKS = [
-    ("github", "GitHub", "@harishhh-paaatel", "https://github.com/harishhh-paaatel",
+    ("github", "GitHub", "github.com/harishhh-paaatel", "https://github.com/harishhh-paaatel",
      lambda x, y: icon("GitHub", x, y, 22)),
-    ("linkedin", "LinkedIn", "in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
+    ("linkedin", "LinkedIn", "linkedin.com/in/kg-harish-patel", "https://www.linkedin.com/in/kg-harish-patel",
      lambda x, y: icon("LinkedIn", x, y, 22)),
     ("email", "Email", "kgharishpatel@gmail.com", "mailto:kgharishpatel@gmail.com",
      lambda x, y: icon("Gmail", x, y, 22)),
@@ -835,10 +893,10 @@ def build_link(key):
 
 
 if __name__ == "__main__":
-    for name, fn in [("hero", build_hero), ("about-life", build_about), ("stack", build_stack),
-                     ("id-dashboard", build_id), ("connect", build_connect),
+    for name, fn in [("hero-stack", build_hero), ("about-life", build_about), ("stack", build_stack),
+                     ("id-dashboard", build_id), ("connect-photo", build_connect),
                      ("connect-title", build_connect_title)] + [
-                     ("link-" + l[0], (lambda k: lambda: build_link(k))(l[0])) for l in LINKS]:
+                     ("card-" + l[0], (lambda k: lambda: build_link(k))(l[0])) for l in LINKS]:
         data = fn()
         path = os.path.join(OUT, name + ".svg")
         with open(path, "w", encoding="utf-8") as f:
